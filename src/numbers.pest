@@ -1,0 +1,3 @@
+number = { ASCII_DIGIT+ }
+enclosed = { "(.." ~ number ~ "..)" }
+sum = { number ~ " + " ~ number }
