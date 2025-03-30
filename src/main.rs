@@ -1,6 +1,10 @@
 fn main() {
+    print!("=== CSV ===\n\n");
     csv::csvparse();
+    print!("\n\n=== numbers ===\n\n");
     numbers::numbersparse();
+    print!("\n\n=== INI ===\n\n");
+    ini::iniparse();
 }
 
 mod csv {
@@ -94,9 +98,61 @@ mod numbers {
 
         println!("{:?}", numbers);
 
-        let mut innerRules = sum.clone().unwrap().next().unwrap().into_inner();
+        let mut inner_rules = sum.clone().unwrap().next().unwrap().into_inner();
 
-        let lhs = innerRules.next().unwrap().as_str();
-        let rhs = innerRules.next().unwrap().as_str();
+        let lhs = inner_rules.next().unwrap().as_str();
+        let rhs = inner_rules.next().unwrap().as_str();
+
+        println!("lhs: {}", lhs);
+        println!("rhs: {}", rhs);
+    }
+}
+
+mod ini {
+    use std::{collections::HashMap, fs, hash::Hash};
+
+    use pest::Parser;
+    use pest_derive::Parser;
+
+    #[derive(Parser)]
+    #[grammar = "ini.pest"]
+    pub struct INIParser;
+
+    pub fn iniparse() {
+        let unparsed_file = fs::read_to_string("example.ini").expect("Unable to load example.ini");
+
+        let file = INIParser::parse(Rule::file, &unparsed_file)
+            .expect("Error parsing the file")
+            .next()
+            .unwrap();
+
+        println!("\n\n=== Parsed INI File ===");
+        println!("{:#?}", file);
+
+        let mut configuration: HashMap<&str, HashMap<&str, &str>> = HashMap::new();
+
+        let mut current_section = "";
+
+        for line in file.into_inner() {
+            match line.as_rule() {
+                Rule::section => {
+                    current_section = line.into_inner().next().unwrap().as_str();
+                }
+                Rule::rule => {
+                    let mut i = line.into_inner();
+                    let key = i.next().unwrap().as_str();
+                    let value = i.next().unwrap().as_str();
+                    configuration
+                        .entry(current_section)
+                        .or_default()
+                        .insert(key, value);
+                }
+                Rule::EOI => (),
+                _ => unreachable!(),
+            }
+        }
+
+        println!("\n\n=== INI File Configuration ===");
+        println!("{:#?}", configuration);
     }
 }

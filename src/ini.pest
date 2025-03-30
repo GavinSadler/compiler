@@ -1,0 +1,17 @@
+
+WHITESPACE = _{ " " }
+
+name = _{@{ (ASCII_ALPHA | "_")+ ~ (ASCII_ALPHANUMERIC | "_")* }}
+
+key = { name }
+value = { (!NEWLINE ~ ANY)* }
+
+rule = { key ~ "=" ~ value}
+
+section = { "[" ~ name ~ "]" }
+
+file = { 
+    SOI ~ 
+    ((rule | section)? ~ NEWLINE)* ~
+    EOI
+}
